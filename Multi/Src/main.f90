@@ -7,6 +7,7 @@ program hydro_main
   use hydro_parameters
   use hydro_IO
   use hydro_principal
+  use mpi
   implicit none
 
   real(kind=prec_real)   :: dt, tps_elapsed, tps_cpu, t_deb, t_fin
