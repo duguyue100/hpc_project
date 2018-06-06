@@ -30,7 +30,7 @@ subroutine read_params
 !      STOP
 !   END IF
 !   CALL getarg(1,infile)
-  infile="../Input/input.nml"
+  infile="../Input/input_yh.nml"
   open(1,file=infile)
   read(1,NML=run)
   read(1,NML=mesh)
