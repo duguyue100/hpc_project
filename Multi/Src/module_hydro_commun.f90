@@ -22,6 +22,8 @@ module hydro_commons
   real(kind=prec_real),allocatable,dimension(:,:,:) :: block_uold
   real(kind=prec_real)   :: t=0.
   integer(kind=prec_int) :: nstep=0
+  ! MPI related
+  integer :: nb_procs, rank, code
 end module hydro_commons
 
 module hydro_parameters

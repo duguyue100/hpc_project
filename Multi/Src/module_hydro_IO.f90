@@ -58,6 +58,7 @@ subroutine output
   print*,'Outputting array of size=',nx,ny,nvar
   write(10)real(t,kind=prec_output),real(gamma,kind=prec_output)
   write(10)nx,ny,nvar,nstep
+  ! write the simulation slice
   write(10)real(uold(imin+2:imax-2,jmin+2:jmax-2,1:nvar),kind=prec_output)
   close(10)
 

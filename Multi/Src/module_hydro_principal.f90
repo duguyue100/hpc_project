@@ -21,7 +21,6 @@ subroutine init_hydro
   integer(kind=prec_int) :: i,j
   ! length of each block at y axis
   integer :: block_length
-  integer :: nb_procs, rank, code
   integer :: block_imin, block_imax, block_jmin, block_jmax, iter_jmin, iter_jmax
 
   global_imin=1
@@ -135,6 +134,7 @@ subroutine cmpdt(dt)
   real(kind=prec_real)   :: cournox,cournoy,eken
   real(kind=prec_real),  dimension(:,:), allocatable   :: q
   real(kind=prec_real),  dimension(:)  , allocatable   :: e,c
+  real(kind=prec_real) :: block_dt
 
   ! compute time step on grid interior
   cournox = zero
@@ -143,7 +143,8 @@ subroutine cmpdt(dt)
   allocate(q(1:nx,1:IP))
   allocate(e(1:nx),c(1:nx))
 
-  do j=jmin+2,jmax-2
+  ! do j=jmin+2,jmax-2
+  do j=jmin,jmax
 
      do i=1,nx
         q(i,ID) = max(uold(i+2,j,ID),smallr)
@@ -163,7 +164,7 @@ subroutine cmpdt(dt)
 
   deallocate(q,e,c)
 
-  dt = courant_factor*dx/max(cournox,cournoy,smallc)
+  block_dt = courant_factor*dx/max(cournox,cournoy,smallc)
 end subroutine cmpdt
 
 
