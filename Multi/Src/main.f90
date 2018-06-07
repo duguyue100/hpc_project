@@ -41,16 +41,16 @@ program hydro_main
         call cmpdt(dt)
         if(nstep==0)dt=dt/2.
      endif
-  !
-  !    ! Directional splitting
-  !    if(MOD(nstep,2)==0)then
-  !       call godunov(1,dt)
-  !       call godunov(2,dt)
-  !    else
-  !       call godunov(2,dt)
-  !       call godunov(1,dt)
-  !    end if
-  !
+     !
+     ! ! Directional splitting
+     ! if(MOD(nstep,2)==0)then
+     !    call godunov(1,dt)
+     !    call godunov(2,dt)
+     ! else
+     !    call godunov(2,dt)
+     !    call godunov(1,dt)
+     ! end if
+     !
      nstep=nstep+1
      t=t+dt
      ! write(*,'("step=",I6," t=",1pe10.3," dt=",1pe10.3)')nstep,t,dt
