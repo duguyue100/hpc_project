@@ -14,17 +14,69 @@ subroutine init_hydro
   use hydro_commons
   use hydro_const
   use hydro_parameters
+  use mpi
   implicit none
 
   ! Local variables
   integer(kind=prec_int) :: i,j
+  ! length of each block at y axis
+  integer :: block_length
+  integer :: nb_procs, rank, code
+  integer :: block_imin, block_imax, block_jmin, block_jmax, iter_jmin, iter_jmax
+  ! separate compute for each block
+  real(kind=prec_real),allocatable,dimension(:,:,:) :: block_uold
 
   imin=1
   imax=nx+4
   jmin=1
   jmax=ny+4
-  
+
+  ! allocate memory as the size of the simulation area
   allocate(uold(imin:imax,jmin:jmax,1:nvar))
+
+  ! get number of processes and rank
+  call MPI_COMM_SIZE(MPI_COMM_WORLD, nb_procs, code)
+  call MPI_COMM_RANK(MPI_COMM_WORLD, rank, code)
+  
+  ! assume block_length is multiple of ny
+  block_length = ny/nb_procs
+
+  block_jmin = 1
+  if (rank == 0 .OR. rank == nb_procs-1) then
+      block_jmax = block_length+2
+  else
+      block_jmax = block_length
+  end if
+  block_imin = imin
+  block_imax = imax
+
+  ! allocate memory for block_uold
+  allocate(block_uold(block_imin:block_imax, block_jmin:block_jmax, 1:nvar))
+
+  ! define iterate boundary
+  iter_jmin = block_jmin
+  iter_jmax = block_jmax
+  if (rank==0) then
+    iter_jmin = block_jmin+2
+  elseif (rank == nb_procs-1) then
+    iter_jmax = block_jmax-2
+  endif
+
+  ! assign values
+  do j=iter_jmin,iter_jmax
+     do i=imin+2,imax-2
+       block_uold(i,j,ID)=1.0
+       block_uold(i,j,IU)=0.0
+       block_uold(i,j,IV)=0.0
+       block_uold(i,j,IP)=1.d-5
+     end do
+  end do
+
+  if (rank==0) then
+      block_uold(block_imin+2,block_jmin+2,IP)=1./dx/dx
+  endif
+
+  print *, rank, block_uold(3, 3, 4), dx
 
   ! Initial conditions in grid interior
   ! Warning: conservative variables U = (rho, rhou, rhov, E)
@@ -40,15 +92,15 @@ subroutine init_hydro
 !!$  end do
 
   ! Wind tunnel with point explosion
-  do j=jmin+2,jmax-2
-     do i=imin+2,imax-2
-        uold(i,j,ID)=1.0
-        uold(i,j,IU)=0.0
-        uold(i,j,IV)=0.0
-        uold(i,j,IP)=1.d-5
-     end do
-  end do
-  uold(imin+2,jmin+2,IP)=1./dx/dx
+  ! do j=jmin+2,jmax-2
+  !    do i=imin+2,imax-2
+  !       uold(i,j,ID)=1.0
+  !       uold(i,j,IU)=0.0
+  !       uold(i,j,IV)=0.0
+  !       uold(i,j,IP)=1.d-5
+  !    end do
+  ! end do
+  ! uold(imin+2,jmin+2,IP)=1./dx/dx
 
 !!$  ! 1D Sod test
 !!$  do j=jmin+2,jmax-2
