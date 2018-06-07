@@ -76,7 +76,7 @@ subroutine init_hydro
       uold(block_imin+2,block_jmin+2,IP)=1./dx/dx
   endif
 
-  print *, rank, uold(3, 3, 4), dx
+  ! print *, rank, uold(3, 3, 4), dx
 
   ! Initial conditions in grid interior
   ! Warning: conservative variables U = (rho, rhou, rhov, E)
@@ -125,6 +125,7 @@ subroutine cmpdt(dt)
   use hydro_const
   use hydro_parameters
   use hydro_utils
+  use mpi
   implicit none
 
   ! Dummy arguments
@@ -135,6 +136,8 @@ subroutine cmpdt(dt)
   real(kind=prec_real),  dimension(:,:), allocatable   :: q
   real(kind=prec_real),  dimension(:)  , allocatable   :: e,c
   real(kind=prec_real) :: block_dt
+  ! collect all block_dts
+  real(kind=prec_real), dimension(nb_procs) :: block_dts
 
   ! compute time step on grid interior
   cournox = zero
@@ -143,8 +146,8 @@ subroutine cmpdt(dt)
   allocate(q(1:nx,1:IP))
   allocate(e(1:nx),c(1:nx))
 
-  ! do j=jmin+2,jmax-2
-  do j=jmin,jmax
+  do j=jmin+2,jmax-2
+  ! do j=jmin,jmax
 
      do i=1,nx
         q(i,ID) = max(uold(i+2,j,ID),smallr)
@@ -165,6 +168,15 @@ subroutine cmpdt(dt)
   deallocate(q,e,c)
 
   block_dt = courant_factor*dx/max(cournox,cournoy,smallc)
+  ! send all dts to process 0
+  call MPI_GATHER(block_dt, 1, MPI_REAL, block_dts, 1, &
+      MPI_REAL, 0, MPI_COMM_WORLD, code)
+  dt = minval(block_dts)
+  call MPI_BCAST(dt, 1, MPI_REAL, 0, MPI_COMM_WORLD, code)
+
+  print *, rank, block_dts(1:nb_procs), dt
+  ! dummy for debugging
+  ! dt = 1.
 end subroutine cmpdt
 
 

@@ -28,7 +28,6 @@ program hydro_main
   call init_hydro
 
   print*,'Starting time integration, nx = ',nx,' ny = ',ny  
-
   ! Main time loop
   do while (t < tend .and. nstep < nstepmax)
 
@@ -54,7 +53,7 @@ program hydro_main
   !
      nstep=nstep+1
      t=t+dt
-     write(*,'("step=",I6," t=",1pe10.3," dt=",1pe10.3)')nstep,t,dt
+     ! write(*,'("step=",I6," t=",1pe10.3," dt=",1pe10.3)')nstep,t,dt
 
   end do
   !
