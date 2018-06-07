@@ -135,7 +135,7 @@ subroutine cmpdt(dt)
   real(kind=prec_real)   :: cournox,cournoy,eken
   real(kind=prec_real),  dimension(:,:), allocatable   :: q
   real(kind=prec_real),  dimension(:)  , allocatable   :: e,c
-  real(kind=prec_real) :: block_dt
+  real(kind=prec_real), dimension(1) :: block_dt
   ! collect all block_dts
   real(kind=prec_real), dimension(nb_procs) :: block_dts
 
@@ -146,8 +146,8 @@ subroutine cmpdt(dt)
   allocate(q(1:nx,1:IP))
   allocate(e(1:nx),c(1:nx))
 
-  do j=jmin+2,jmax-2
-  ! do j=jmin,jmax
+  ! do j=jmin+2,jmax-2
+  do j=jmin,jmax
 
      do i=1,nx
         q(i,ID) = max(uold(i+2,j,ID),smallr)
@@ -167,16 +167,14 @@ subroutine cmpdt(dt)
 
   deallocate(q,e,c)
 
-  block_dt = courant_factor*dx/max(cournox,cournoy,smallc)
-  ! send all dts to process 0
-  call MPI_GATHER(block_dt, 1, MPI_REAL, block_dts, 1, &
-      MPI_REAL, 0, MPI_COMM_WORLD, code)
+  block_dt(1) = courant_factor*dx/max(cournox,cournoy,smallc)
+  ! send all dts to everyone
+  call MPI_ALLGATHER(block_dt, 1, MPI_DOUBLE_PRECISION, block_dts, 1, &
+      MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, code)
+  ! set time to minimum 
   dt = minval(block_dts)
-  call MPI_BCAST(dt, 1, MPI_REAL, 0, MPI_COMM_WORLD, code)
+  print *, rank, dt
 
-  print *, rank, block_dts(1:nb_procs), dt
-  ! dummy for debugging
-  ! dt = 1.
 end subroutine cmpdt
 
 

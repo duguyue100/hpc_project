@@ -111,6 +111,7 @@ subroutine cmpdt(dt)
   deallocate(q,e,c)
 
   dt = courant_factor*dx/max(cournox,cournoy,smallc)
+  print *, dt
 end subroutine cmpdt
 
 
