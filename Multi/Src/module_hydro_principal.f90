@@ -23,21 +23,20 @@ subroutine init_hydro
   integer :: block_length
   integer :: nb_procs, rank, code
   integer :: block_imin, block_imax, block_jmin, block_jmax, iter_jmin, iter_jmax
-  ! separate compute for each block
-  real(kind=prec_real),allocatable,dimension(:,:,:) :: block_uold
 
-  imin=1
-  imax=nx+4
-  jmin=1
-  jmax=ny+4
+  global_imin=1
+  global_imax=nx+4
+  global_jmin=1
+  global_jmax=ny+4
 
-  ! allocate memory as the size of the simulation area
-  allocate(uold(imin:imax,jmin:jmax,1:nvar))
+  ! allocate(uold(imin:imax,jmin:jmax,1:nvar))
 
   ! get number of processes and rank
   call MPI_COMM_SIZE(MPI_COMM_WORLD, nb_procs, code)
   call MPI_COMM_RANK(MPI_COMM_WORLD, rank, code)
   
+  ! allocate memory as the size of the simulation area
+
   ! assume block_length is multiple of ny
   block_length = ny/nb_procs
 
@@ -47,36 +46,38 @@ subroutine init_hydro
   else
       block_jmax = block_length
   end if
-  block_imin = imin
-  block_imax = imax
+  block_imin = global_imin
+  block_imax = global_imax
 
   ! allocate memory for block_uold
-  allocate(block_uold(block_imin:block_imax, block_jmin:block_jmax, 1:nvar))
+  allocate(uold(block_imin:block_imax, block_jmin:block_jmax, 1:nvar))
 
   ! define iterate boundary
-  iter_jmin = block_jmin
-  iter_jmax = block_jmax
+  jmin = block_jmin
+  jmax = block_jmax
+  imin = global_imin
+  imax = global_imax
   if (rank==0) then
-    iter_jmin = block_jmin+2
+    jmin = block_jmin+2
   elseif (rank == nb_procs-1) then
-    iter_jmax = block_jmax-2
+    jmax = block_jmax-2
   endif
 
   ! assign values
-  do j=iter_jmin,iter_jmax
+  do j=jmin,jmax
      do i=imin+2,imax-2
-       block_uold(i,j,ID)=1.0
-       block_uold(i,j,IU)=0.0
-       block_uold(i,j,IV)=0.0
-       block_uold(i,j,IP)=1.d-5
+       uold(i,j,ID)=1.0
+       uold(i,j,IU)=0.0
+       uold(i,j,IV)=0.0
+       uold(i,j,IP)=1.d-5
      end do
   end do
 
   if (rank==0) then
-      block_uold(block_imin+2,block_jmin+2,IP)=1./dx/dx
+      uold(block_imin+2,block_jmin+2,IP)=1./dx/dx
   endif
 
-  print *, rank, block_uold(3, 3, 4), dx
+  print *, rank, uold(3, 3, 4), dx
 
   ! Initial conditions in grid interior
   ! Warning: conservative variables U = (rho, rhou, rhov, E)

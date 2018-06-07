@@ -15,8 +15,11 @@ end module hydro_precision
 
 module hydro_commons
   use hydro_precision
+  integer(kind=prec_int) :: global_imin,global_imax,global_jmin,global_jmax
   integer(kind=prec_int) :: imin,imax,jmin,jmax
   real(kind=prec_real),allocatable,dimension(:,:,:) :: uold
+  ! separate compute for each block
+  real(kind=prec_real),allocatable,dimension(:,:,:) :: block_uold
   real(kind=prec_real)   :: t=0.
   integer(kind=prec_int) :: nstep=0
 end module hydro_commons
