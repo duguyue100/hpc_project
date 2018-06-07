@@ -173,7 +173,6 @@ subroutine cmpdt(dt)
       MPI_DOUBLE_PRECISION, MPI_COMM_WORLD, code)
   ! set time to minimum 
   dt = minval(block_dts)
-  print *, rank, dt
 
 end subroutine cmpdt
 
